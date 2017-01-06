@@ -12,4 +12,4 @@ I built a fun little app that creates those creatures, and lets the user move th
 ![](creatures.png)
 
 
-This is live at [www.jasrub.com/IDEO-pop-quiz](www.jasrub.com/IDEO-pop-quiz)
+This is live at [www.jasrub.com/IDEO-pop-quiz](http://www.jasrub.com/IDEO-pop-quiz/)

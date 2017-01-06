@@ -17,3 +17,12 @@ canvas[resize] {
     padding:2em;
     position:absolute;
 }
+
+.sign {
+    background-color: rgba(255, 255, 255, 0.0); /* Color white with alpha 0.9*/
+    font-family: 'Rasa', serif;
+    padding:2em;
+    position:absolute;
+    bottom: 0;
+    right: 0;
+}
