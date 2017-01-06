@@ -2,32 +2,6 @@
  * Created by jasrub on 1/5/17.
  */
 
-
-function onMouseDown(event) {
-    var hue = Math.random() * 360;
-    project.currentStyle.fillColor = {
-        hue: hue,
-        saturation: 1,
-        brightness: 1
-    };
-}
-
-function onMouseDrag(event) {
-    var delta = event.point - event.downPoint;
-    var radius = delta.length;
-    var points = 5 + Math.round(radius / 50);
-    var path = new Path.Star({
-        center: event.downPoint,
-        points: points,
-        radius1: radius / 2,
-        radius2: radius
-    });
-    path.rotate(delta.angle);
-    // Remove the path automatically before the next mouse drag
-    // event:
-    path.removeOnDrag();
-}
-
 var values = {
     paths: 30,
     minPoints: 5,
@@ -43,34 +17,13 @@ var hitOptions = {
     tolerance: 5
 };
 
-//createPaths();
-
-function createPaths() {
-    var radiusDelta = values.maxRadius - values.minRadius;
-    var pointsDelta = values.maxPoints - values.minPoints;
-    for (var i = 0; i < values.paths; i++) {
-        var radius = values.minRadius + Math.random() * radiusDelta;
-        var points = values.minPoints + Math.floor(Math.random() * pointsDelta);
-        var path = createBlob(view.size * Point.random(), radius, points);
-        var lightness = 0.8; //(Math.random() - 0.5) * 0.4 + 0.4;
-        var hue = Math.random() * 360;
-        path.fillColor = { hue: hue, saturation: 0.6, lightness: lightness };
-        path.strokeColor = 'black';
-        // When the mouse is double clicked on the item, remove it:
-    };
-}
-
+var creatures = []
 function randomBlob(center){
-    console.log("random blob!")
     var radiusDelta = values.maxRadius - values.minRadius;
     var pointsDelta = values.maxPoints - values.minPoints;
     var radius = values.minRadius + Math.random() * radiusDelta;
     var points = values.minPoints + Math.floor(Math.random() * pointsDelta);
-    var path = createBlob(center, radius, points);
-    var lightness = 0.8; //(Math.random() - 0.5) * 0.4 + 0.4;
-    var hue = Math.random() * 360;
-    path.fillColor = { hue: hue, saturation: 0.6, lightness: lightness };
-    path.strokeColor = 'black';
+    creatures.push(createBlob(center, radius, points));
 }
 
 function createBlob(center, maxRadius, points) {
@@ -84,55 +37,55 @@ function createBlob(center, maxRadius, points) {
         path.add(center + delta);
     }
     path.smooth();
+
+    var lightness = 0.8; //(Math.random() - 0.5) * 0.4 + 0.4;
+    var hue = Math.random() * 360;
+    path.fillColor = { hue: hue, saturation: 0.6, lightness: lightness };
+    path.strokeColor = 'black';
+
+    var group = new Group();
+    group.addChild(path);
+    group.addChildren(createEyes(center, maxRadius));
+
     // When the mouse is double clicked on the item, remove it:
-    path.onDoubleClick = function(event) {
+    group.onDoubleClick = function(event) {
+        console.log(this);
+        this.removeChildren();
         this.remove();
     }
-    return path;
+    group.onMouseDrag = function(event) {
+        this.position += event.delta;
+    }
 }
 
-var segment, path;
-var movePath = false;
+function createEyes(center, maxRadius){
+    var eyeMinSize = 3;
+    var eyeMaxSize = 15
+    var eyeOffset = (Math.random() * maxRadius * 0.5)
+    var eye1 = new Path.Circle({
+        radius: getRandomArbitrary(eyeMinSize, eyeMaxSize),
+        center: [center.x+eyeOffset, center.y],
+        strokeColor: 'black'
+    });
+    var eye2 = new Path.Circle({
+        radius: getRandomArbitrary(eyeMinSize, eyeMaxSize),
+        center: [center.x-eyeOffset, center.y],
+        strokeColor: 'black'
+    });
+    return [eye1, eye2]
+
+}
+
+
 function onMouseDown(event) {
-    segment = path = null;
     var hitResult = project.hitTest(event.point, hitOptions);
     if (!hitResult) {
         randomBlob(event.point);
-    }
-
-    if (event.modifiers.shift) {
-        if (hitResult.type == 'segment') {
-            hitResult.segment.remove();
-        };
         return;
     }
-
-    if (hitResult) {
-        path = hitResult.item;
-        if (hitResult.type == 'segment') {
-            segment = hitResult.segment;
-        } else if (hitResult.type == 'stroke') {
-            var location = hitResult.location;
-            segment = path.insert(location.index + 1, event.point);
-            path.smooth();
-        }
-    }
-    movePath = hitResult.type == 'fill';
-    if (movePath)
-        project.activeLayer.addChild(hitResult.item);
 }
 
-function onMouseMove(event) {
-    project.activeLayer.selected = false;
-    if (event.item)
-        event.item.selected = true;
-}
-
-function onMouseDrag(event) {
-    if (segment) {
-        segment.point += event.delta;
-        path.smooth();
-    } else if (path) {
-        path.position += event.delta;
-    }
+// Returns a random number between min (inclusive) and max (exclusive)
+function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
 }
